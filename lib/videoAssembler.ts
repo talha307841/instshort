@@ -245,12 +245,6 @@ export async function assembleVideo(payload: AssemblePayload) {
 
   for (let i = 0; i < scenes.length; i += 1) {
     const scene = scenes[i];
-    const filters = [`scale=${width}:${height}`];
-
-    if (scene.kenBurns) {
-      filters.push(`zoompan=z='min(zoom+0.0015,1.4)':d=${Math.ceil(scene.duration * 25)}:s=${width}x${height}`);
-    }
-
     await ffmpeg.exec([
       "-y",
       "-loop",
@@ -260,11 +254,15 @@ export async function assembleVideo(payload: AssemblePayload) {
       "-t",
       String(scene.duration),
       "-vf",
-      filters.join(","),
+      `scale=${width}:${height}`,
       "-r",
-      "25",
+      "24",
       "-c:v",
       "libx264",
+      "-preset",
+      "ultrafast",
+      "-crf",
+      "28",
       "-pix_fmt",
       "yuv420p",
       `segment_${i}.mp4`,
