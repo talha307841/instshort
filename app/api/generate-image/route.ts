@@ -13,6 +13,17 @@ function buildPrompt(category: CategoryKey, prompt: string, mood: string) {
   return `${prompt}, ${mood}, ${style}, vertical composition, 9:16 aspect ratio, no text, photorealistic`;
 }
 
+/** Produces a URL-safe alphanumeric seed for Picsum from an arbitrary prompt string. */
+function sanitizePicsumSeed(prompt: string): string {
+  return (
+    prompt
+      .slice(0, PICSUM_SEED_MAX_LENGTH)
+      .replace(/[^a-zA-Z0-9]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-+|-+$/g, "") || "placeholder"
+  );
+}
+
 export async function POST(request: Request) {
   try {
     const { prompt, category, mood } = (await request.json()) as {
@@ -38,13 +49,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ ...hf, prompt: enhancedPrompt });
       } catch {
         // Both AI providers unavailable – return a placeholder so the studio stays functional
-        // Strip non-alphanumeric characters so the seed works reliably with Picsum's URL scheme.
-        const seed =
-          prompt
-            .slice(0, PICSUM_SEED_MAX_LENGTH)
-            .replace(/[^a-zA-Z0-9]/g, "-")
-            .replace(/-+/g, "-")
-            .replace(/^-+|-+$/g, "") || "placeholder";
+        const seed = sanitizePicsumSeed(prompt);
         return NextResponse.json({
           provider: "fallback",
           imageBase64: null,

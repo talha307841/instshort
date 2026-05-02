@@ -226,8 +226,9 @@ export default function StudioProjectPage() {
   }
 
   async function generateAllVisuals() {
-    // Snapshot scenes so the loop stays stable even if store updates trigger re-renders.
-    const scenes = project.scenes;
+    // Spread to create a shallow copy so the loop remains stable even if store
+    // updates during iteration change the scenes array reference.
+    const scenes = [...project.scenes];
     const total = scenes.length;
     if (total === 0) return;
 
