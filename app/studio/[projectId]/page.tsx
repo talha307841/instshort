@@ -20,6 +20,31 @@ import { assembleVideo } from "@/lib/videoAssembler";
 
 const steps = ["Idea & Script", "Visuals", "Audio", "Style & Captions", "Export"];
 
+const LABEL_GENERATING_SCRIPT = "Generating script...";
+const LABEL_IMPROVING_SCRIPT = "Improving script...";
+const LABEL_GENERATING_VISUAL_PREFIX = "Generating visual";
+
+/**
+ * Returns `busyText` while the project is generating with the given trigger label,
+ * otherwise returns `idleText`. For visual generation (prefix match) pass the
+ * progressLabel itself as `busyText`; if undefined, `idleText` is used as the fallback.
+ */
+function getButtonLabel(
+  status: string,
+  progressLabel: string | undefined,
+  triggerLabel: string,
+  busyText: string | undefined,
+  idleText: string,
+  matchMode: "exact" | "prefix" = "exact",
+): string {
+  const isActive =
+    status === "generating" &&
+    (matchMode === "prefix"
+      ? progressLabel?.startsWith(triggerLabel)
+      : progressLabel === triggerLabel);
+  return isActive ? (busyText ?? idleText) : idleText;
+}
+
 export default function StudioProjectPage() {
   const params = useParams<{ projectId: string }>();
   const router = useRouter();
@@ -96,6 +121,7 @@ export default function StudioProjectPage() {
   }
 
   async function handleGenerateScript() {
+    markProgress(project.id, 0, LABEL_GENERATING_SCRIPT);
     updateProject(project.id, { status: "generating" });
     try {
       const response = await fetch("/api/generate-script", {
@@ -127,6 +153,7 @@ export default function StudioProjectPage() {
   async function handleImproveScript() {
     if (!project.script || !feedback.trim()) return;
 
+    markProgress(project.id, 0, LABEL_IMPROVING_SCRIPT);
     updateProject(project.id, { status: "generating" });
 
     try {
@@ -199,11 +226,28 @@ export default function StudioProjectPage() {
   }
 
   async function generateAllVisuals() {
-    for (const scene of project.scenes) {
+    // Shallow copy protects against store updates during async operations replacing
+    // the array reference, which would cause the loop to process a stale or different array.
+    const scenes = [...project.scenes];
+    const total = scenes.length;
+    if (total === 0) return;
+
+    updateProject(project.id, { status: "generating" });
+    markProgress(project.id, 0, `${LABEL_GENERATING_VISUAL_PREFIX} 1 of ${total}...`);
+
+    for (let i = 0; i < total; i += 1) {
       // Sequential generation avoids concurrent API quota spikes on free tiers.
       // eslint-disable-next-line no-await-in-loop
-      await regenerateSceneVisual(scene);
+      await regenerateSceneVisual(scenes[i]);
+      // i + 1 is the number of completed scenes (zero-indexed i plus one).
+      markProgress(
+        project.id,
+        Math.round(((i + 1) / total) * 100),
+        `Visual ${i + 1} of ${total} completed`,
+      );
     }
+
+    updateProject(project.id, { status: "idle" });
     setCurrentStep(3);
   }
 
@@ -298,8 +342,18 @@ export default function StudioProjectPage() {
           </div>
 
           <div className="grid gap-3 md:grid-cols-2">
-            <button className="btn-primary" onClick={handleGenerateScript}>
-              Generate Script
+            <button
+              className="btn-primary"
+              onClick={handleGenerateScript}
+              disabled={project.status === "generating" || project.status === "assembling"}
+            >
+              {getButtonLabel(
+                project.status,
+                project.progressLabel,
+                LABEL_GENERATING_SCRIPT,
+                "Generating...",
+                "Generate Script",
+              )}
             </button>
             <div className="flex gap-2">
               <input
@@ -308,8 +362,18 @@ export default function StudioProjectPage() {
                 placeholder="Feedback to improve script"
                 onChange={(event) => setFeedback(event.target.value)}
               />
-              <button className="btn-secondary whitespace-nowrap" onClick={handleImproveScript}>
-                Improve Script
+              <button
+                className="btn-secondary whitespace-nowrap"
+                onClick={handleImproveScript}
+                disabled={project.status === "generating" || project.status === "assembling"}
+              >
+                {getButtonLabel(
+                  project.status,
+                  project.progressLabel,
+                  LABEL_IMPROVING_SCRIPT,
+                  "Improving...",
+                  "Improve Script",
+                )}
               </button>
             </div>
           </div>
@@ -325,8 +389,19 @@ export default function StudioProjectPage() {
         <section className="card space-y-4 p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-3xl">Step 2 - Visuals</h2>
-            <button className="btn-primary" onClick={generateAllVisuals} disabled={!project.scenes.length}>
-              Auto Generate All Visuals
+            <button
+              className="btn-primary"
+              onClick={generateAllVisuals}
+              disabled={!project.scenes.length || project.status === "generating" || project.status === "assembling"}
+            >
+              {getButtonLabel(
+                project.status,
+                project.progressLabel,
+                LABEL_GENERATING_VISUAL_PREFIX,
+                project.progressLabel,
+                "Auto Generate All Visuals",
+                "prefix",
+              )}
             </button>
           </div>
 
@@ -470,7 +545,15 @@ export default function StudioProjectPage() {
 
         <section className="card space-y-4 p-5">
           <h2 className="text-3xl">Step 5 - Export</h2>
-          <button className="btn-primary" onClick={handleAssemble} disabled={!project.scenes.length}>
+          <button
+            className="btn-primary"
+            onClick={handleAssemble}
+            disabled={
+              !project.scenes.length ||
+              project.status === "generating" ||
+              project.status === "assembling"
+            }
+          >
             Assemble Video
           </button>
 
@@ -495,7 +578,11 @@ export default function StudioProjectPage() {
         </section>
       </div>
 
-      <ProgressOverlay show={project.status === "assembling"} progress={project.progress} label={project.progressLabel} />
+      <ProgressOverlay
+        show={project.status === "assembling" || project.status === "generating"}
+        progress={project.progress}
+        label={project.progressLabel}
+      />
     </main>
   );
 }
