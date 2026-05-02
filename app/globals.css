@@ -3,31 +3,109 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+  --bg-primary: #080808;
+  --bg-secondary: #111111;
+  --bg-card: #161616;
+  --bg-card-hover: #1e1e1e;
+  --accent-primary: #e63946;
+  --accent-secondary: #f4a261;
+  --accent-glow: rgba(230, 57, 70, 0.15);
+  --text-primary: #f5f5f5;
+  --text-secondary: #9ca3af;
+  --text-muted: #4b5563;
+  --border: #2a2a2a;
+  --border-accent: #e63946;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  font-family: var(--font-body), sans-serif;
+  color: var(--text-primary);
+  background:
+    radial-gradient(circle at 15% 20%, rgba(244, 162, 97, 0.14), transparent 30%),
+    radial-gradient(circle at 85% 0%, rgba(230, 57, 70, 0.16), transparent 35%),
+    linear-gradient(180deg, #0a0a0a 0%, #080808 100%);
+  min-height: 100vh;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading), sans-serif;
+  letter-spacing: 0.05em;
+}
+
+code,
+.mono {
+  font-family: var(--font-mono), monospace;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+.card:hover {
+  border-color: var(--border-accent);
+  background: var(--bg-card-hover);
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+
+.btn-primary {
+  background: var(--accent-primary);
+  border: 1px solid var(--accent-primary);
+  color: #ffffff;
+  border-radius: 10px;
+  padding: 0.65rem 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--accent-primary);
+  color: var(--text-primary);
+  border-radius: 10px;
+  padding: 0.65rem 1rem;
+}
+
+.input-dark {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: 0.65rem 0.85rem;
+  outline: none;
+}
+
+.input-dark:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(230, 57, 70, 0.2);
+}
+
+.progress-track {
+  background: #1c1c1c;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  background: linear-gradient(90deg, var(--accent-primary), #ff5e3a);
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.5); }
+  100% { box-shadow: 0 0 0 10px rgba(230, 57, 70, 0); }
+}
+
+.step-current {
+  animation: pulse-ring 1.8s infinite;
 }
