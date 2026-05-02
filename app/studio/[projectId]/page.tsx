@@ -24,6 +24,27 @@ const LABEL_GENERATING_SCRIPT = "Generating script...";
 const LABEL_IMPROVING_SCRIPT = "Improving script...";
 const LABEL_GENERATING_VISUAL_PREFIX = "Generating visual";
 
+/**
+ * Returns `busyText` while the project is generating with the given trigger label,
+ * otherwise returns `idleText`. For visual generation (prefix match) pass the
+ * progressLabel itself as `busyText`.
+ */
+function getButtonLabel(
+  status: string,
+  progressLabel: string | undefined,
+  triggerLabel: string,
+  busyText: string,
+  idleText: string,
+  matchMode: "exact" | "prefix" = "exact",
+): string {
+  const isActive =
+    status === "generating" &&
+    (matchMode === "prefix"
+      ? progressLabel?.startsWith(triggerLabel)
+      : progressLabel === triggerLabel);
+  return isActive ? busyText : idleText;
+}
+
 export default function StudioProjectPage() {
   const params = useParams<{ projectId: string }>();
   const router = useRouter();
@@ -324,9 +345,13 @@ export default function StudioProjectPage() {
               onClick={handleGenerateScript}
               disabled={project.status === "generating" || project.status === "assembling"}
             >
-              {project.status === "generating" && project.progressLabel === LABEL_GENERATING_SCRIPT
-                ? "Generating..."
-                : "Generate Script"}
+              {getButtonLabel(
+                project.status,
+                project.progressLabel,
+                LABEL_GENERATING_SCRIPT,
+                "Generating...",
+                "Generate Script",
+              )}
             </button>
             <div className="flex gap-2">
               <input
@@ -340,9 +365,13 @@ export default function StudioProjectPage() {
                 onClick={handleImproveScript}
                 disabled={project.status === "generating" || project.status === "assembling"}
               >
-                {project.status === "generating" && project.progressLabel === LABEL_IMPROVING_SCRIPT
-                  ? "Improving..."
-                  : "Improve Script"}
+                {getButtonLabel(
+                  project.status,
+                  project.progressLabel,
+                  LABEL_IMPROVING_SCRIPT,
+                  "Improving...",
+                  "Improve Script",
+                )}
               </button>
             </div>
           </div>
@@ -363,9 +392,14 @@ export default function StudioProjectPage() {
               onClick={generateAllVisuals}
               disabled={!project.scenes.length || project.status === "generating" || project.status === "assembling"}
             >
-              {project.status === "generating" && project.progressLabel?.startsWith(LABEL_GENERATING_VISUAL_PREFIX)
-                ? project.progressLabel
-                : "Auto Generate All Visuals"}
+              {getButtonLabel(
+                project.status,
+                project.progressLabel,
+                LABEL_GENERATING_VISUAL_PREFIX,
+                project.progressLabel ?? "Auto Generate All Visuals",
+                "Auto Generate All Visuals",
+                "prefix",
+              )}
             </button>
           </div>
 

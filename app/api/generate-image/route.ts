@@ -43,7 +43,7 @@ export async function POST(request: Request) {
           .slice(0, PICSUM_SEED_MAX_LENGTH)
           .replace(/[^a-zA-Z0-9]/g, "-")
           .replace(/-+/g, "-")
-          .replace(/^-|-$/g, "");
+          .replace(/^-+|-+$/g, "");
         return NextResponse.json({
           provider: "fallback",
           imageBase64: null,
