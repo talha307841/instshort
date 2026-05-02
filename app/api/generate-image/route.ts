@@ -5,6 +5,9 @@ import { IMAGE_STYLE_HINTS } from "@/lib/prompts";
 
 export const maxDuration = 60;
 
+// Max characters used from the prompt when building the Picsum seed string.
+const PICSUM_SEED_MAX_LENGTH = 30;
+
 function buildPrompt(category: CategoryKey, prompt: string, mood: string) {
   const style = IMAGE_STYLE_HINTS[category] ?? "cinematic";
   return `${prompt}, ${mood}, ${style}, vertical composition, 9:16 aspect ratio, no text, photorealistic`;
@@ -35,7 +38,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ ...hf, prompt: enhancedPrompt });
       } catch {
         // Both AI providers unavailable – return a placeholder so the studio stays functional
-        const seed = encodeURIComponent(prompt.slice(0, 30));
+        const seed = encodeURIComponent(prompt.slice(0, PICSUM_SEED_MAX_LENGTH));
         return NextResponse.json({
           provider: "fallback",
           imageBase64: null,

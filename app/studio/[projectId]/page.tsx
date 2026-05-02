@@ -211,15 +211,16 @@ export default function StudioProjectPage() {
     updateProject(project.id, { status: "generating" });
     markProgress(project.id, 0, `${LABEL_GENERATING_VISUAL_PREFIX} 1 of ${total}...`);
 
-    for (let i = 0; i < project.scenes.length; i += 1) {
+    for (let i = 0; i < total; i += 1) {
       const scene = project.scenes[i];
       // Sequential generation avoids concurrent API quota spikes on free tiers.
       // eslint-disable-next-line no-await-in-loop
       await regenerateSceneVisual(scene);
+      // Progress reflects loop iterations attempted; errors are shown inline per scene.
       markProgress(
         project.id,
         Math.round(((i + 1) / total) * 100),
-        `Generated visual ${i + 1} of ${total}`,
+        `Visual ${i + 1} of ${total} processed`,
       );
     }
 
