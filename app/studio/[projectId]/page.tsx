@@ -20,6 +20,10 @@ import { assembleVideo } from "@/lib/videoAssembler";
 
 const steps = ["Idea & Script", "Visuals", "Audio", "Style & Captions", "Export"];
 
+const LABEL_GENERATING_SCRIPT = "Generating script...";
+const LABEL_IMPROVING_SCRIPT = "Improving script...";
+const LABEL_GENERATING_VISUAL_PREFIX = "Generating visual";
+
 export default function StudioProjectPage() {
   const params = useParams<{ projectId: string }>();
   const router = useRouter();
@@ -96,7 +100,7 @@ export default function StudioProjectPage() {
   }
 
   async function handleGenerateScript() {
-    markProgress(project.id, 0, "Generating script...");
+    markProgress(project.id, 0, LABEL_GENERATING_SCRIPT);
     updateProject(project.id, { status: "generating" });
     try {
       const response = await fetch("/api/generate-script", {
@@ -128,7 +132,7 @@ export default function StudioProjectPage() {
   async function handleImproveScript() {
     if (!project.script || !feedback.trim()) return;
 
-    markProgress(project.id, 0, "Improving script...");
+    markProgress(project.id, 0, LABEL_IMPROVING_SCRIPT);
     updateProject(project.id, { status: "generating" });
 
     try {
@@ -205,10 +209,10 @@ export default function StudioProjectPage() {
     if (total === 0) return;
 
     updateProject(project.id, { status: "generating" });
-    markProgress(project.id, 0, `Generating visual 1 of ${total}...`);
+    markProgress(project.id, 0, `${LABEL_GENERATING_VISUAL_PREFIX} 1 of ${total}...`);
 
     for (let i = 0; i < project.scenes.length; i += 1) {
-      markProgress(project.id, Math.round((i / total) * 100), `Generating visual ${i + 1} of ${total}...`);
+      markProgress(project.id, Math.round((i / total) * 100), `${LABEL_GENERATING_VISUAL_PREFIX} ${i + 1} of ${total}...`);
       // Sequential generation avoids concurrent API quota spikes on free tiers.
       // eslint-disable-next-line no-await-in-loop
       await regenerateSceneVisual(project.scenes[i]);
@@ -315,7 +319,7 @@ export default function StudioProjectPage() {
               onClick={handleGenerateScript}
               disabled={project.status === "generating" || project.status === "assembling"}
             >
-              {project.status === "generating" && project.progressLabel === "Generating script..."
+              {project.status === "generating" && project.progressLabel === LABEL_GENERATING_SCRIPT
                 ? "Generating..."
                 : "Generate Script"}
             </button>
@@ -331,7 +335,7 @@ export default function StudioProjectPage() {
                 onClick={handleImproveScript}
                 disabled={project.status === "generating" || project.status === "assembling"}
               >
-                {project.status === "generating" && project.progressLabel === "Improving script..."
+                {project.status === "generating" && project.progressLabel === LABEL_IMPROVING_SCRIPT
                   ? "Improving..."
                   : "Improve Script"}
               </button>
@@ -354,7 +358,7 @@ export default function StudioProjectPage() {
               onClick={generateAllVisuals}
               disabled={!project.scenes.length || project.status === "generating" || project.status === "assembling"}
             >
-              {project.status === "generating" && project.progressLabel.startsWith("Generating visual")
+              {project.status === "generating" && project.progressLabel.startsWith(LABEL_GENERATING_VISUAL_PREFIX)
                 ? project.progressLabel
                 : "Auto Generate All Visuals"}
             </button>
