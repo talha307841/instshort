@@ -216,7 +216,7 @@ export default function StudioProjectPage() {
       // Sequential generation avoids concurrent API quota spikes on free tiers.
       // eslint-disable-next-line no-await-in-loop
       await regenerateSceneVisual(scene);
-      // i + 1 = scenes completed so far, giving accurate post-completion percentage.
+      // i + 1 = scenes completed so far, giving accurate post-generation percentage.
       markProgress(
         project.id,
         Math.round(((i + 1) / total) * 100),
