@@ -260,6 +260,7 @@ export default function StudioProjectPage() {
   }
 
   async function handleAssemble() {
+    markProgress(project.id, 0, "Preparing video...");
     updateProject(project.id, { status: "assembling" });
 
     try {
@@ -295,6 +296,12 @@ export default function StudioProjectPage() {
 
   return (
     <main className="min-h-screen px-4 py-8 md:px-10">
+      <ProgressOverlay
+        show={project.status === "assembling"}
+        progress={project.progress}
+        label={project.progressLabel || "Assembling video..."}
+      />
+
       <div className="mx-auto max-w-7xl space-y-6">
         <header className="card flex flex-col justify-between gap-4 p-5 md:flex-row md:items-center">
           <div>

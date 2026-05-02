@@ -38,7 +38,7 @@ export function AudioPlayer({ settings, voices, onChange, onPreview, hasElevenLa
         </div>
         {!hasElevenLabs ? (
           <p className="mt-2 text-xs text-[var(--text-secondary)]">
-            ElevenLabs key not found. Free Browser TTS fallback is active.
+            ElevenLabs key not found. Browser TTS works for preview only, and exports will be generated without narration.
           </p>
         ) : null}
       </div>

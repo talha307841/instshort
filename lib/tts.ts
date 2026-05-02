@@ -175,20 +175,24 @@ function createSilentWavBlob(durationSeconds: number) {
 }
 
 export async function getNarrationAudioBlob(text: string, settings: AudioSettings) {
-  try {
-    if (settings.provider === "elevenlabs") {
+  if (settings.provider === "elevenlabs") {
+    try {
       const elevenBlob = await requestElevenLabsAudio(text, settings);
       if (elevenBlob) return elevenBlob;
+    } catch {
+      const seconds = estimateSpeechDurationSeconds(text, settings.speed);
+      return createSilentWavBlob(seconds);
     }
-
-    return await recordSpeechToBlob(text, settings);
-  } catch {
-    const seconds = estimateSpeechDurationSeconds(text, settings.speed);
-    return createSilentWavBlob(seconds);
   }
+
+  return null;
 }
 
 export async function getNarrationAudioDataUrl(text: string, settings: AudioSettings) {
   const blob = await getNarrationAudioBlob(text, settings);
+  if (!blob) {
+    return null;
+  }
+
   return blobToBase64(blob);
 }

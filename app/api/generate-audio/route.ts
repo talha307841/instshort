@@ -4,8 +4,13 @@ export const maxDuration = 60;
 
 const ELEVEN_DEFAULT_VOICE = "21m00Tcm4TlvDq8ikWAM";
 
+function hasUsableElevenLabsKey() {
+  const apiKey = process.env.ELEVENLABS_API_KEY?.trim();
+  return Boolean(apiKey && apiKey !== "your_elevenlabs_key_here");
+}
+
 export async function GET() {
-  const hasElevenLabs = Boolean(process.env.ELEVENLABS_API_KEY);
+  const hasElevenLabs = hasUsableElevenLabsKey();
   return NextResponse.json({
     hasElevenLabs,
     fallback: "web-speech",
@@ -24,8 +29,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "text is required" }, { status: 400 });
     }
 
-    const apiKey = process.env.ELEVENLABS_API_KEY;
-    if (!apiKey) {
+    const apiKey = process.env.ELEVENLABS_API_KEY?.trim();
+    if (!hasUsableElevenLabsKey() || !apiKey) {
       return NextResponse.json({ useWebSpeech: true, provider: "web-speech" });
     }
 
