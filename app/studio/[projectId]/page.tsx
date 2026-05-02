@@ -226,8 +226,7 @@ export default function StudioProjectPage() {
   }
 
   async function generateAllVisuals() {
-    // Spread to create a shallow copy so the loop remains stable even if store
-    // updates during iteration change the scenes array reference.
+    // Shallow copy prevents iteration issues if store updates mutate the scenes array reference during generation.
     const scenes = [...project.scenes];
     const total = scenes.length;
     if (total === 0) return;
@@ -239,7 +238,7 @@ export default function StudioProjectPage() {
       // Sequential generation avoids concurrent API quota spikes on free tiers.
       // eslint-disable-next-line no-await-in-loop
       await regenerateSceneVisual(scenes[i]);
-      // i + 1 = scenes completed so far, giving accurate post-generation percentage.
+      // i + 1 represents scenes completed so far for percentage calculation.
       markProgress(
         project.id,
         Math.round(((i + 1) / total) * 100),

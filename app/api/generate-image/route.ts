@@ -5,7 +5,7 @@ import { IMAGE_STYLE_HINTS } from "@/lib/prompts";
 
 export const maxDuration = 60;
 
-// Max characters used from the prompt when building the Picsum seed string.
+// Max characters from the prompt used as the Picsum seed (balances uniqueness with URL readability).
 const PICSUM_SEED_MAX_LENGTH = 30;
 
 function buildPrompt(category: CategoryKey, prompt: string, mood: string) {
