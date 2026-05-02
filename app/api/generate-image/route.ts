@@ -39,11 +39,12 @@ export async function POST(request: Request) {
       } catch {
         // Both AI providers unavailable – return a placeholder so the studio stays functional
         // Strip non-alphanumeric characters so the seed works reliably with Picsum's URL scheme.
-        const seed = prompt
-          .slice(0, PICSUM_SEED_MAX_LENGTH)
-          .replace(/[^a-zA-Z0-9]/g, "-")
-          .replace(/-+/g, "-")
-          .replace(/^-+|-+$/g, "");
+        const seed =
+          prompt
+            .slice(0, PICSUM_SEED_MAX_LENGTH)
+            .replace(/[^a-zA-Z0-9]/g, "-")
+            .replace(/-+/g, "-")
+            .replace(/^-+|-+$/g, "") || "placeholder";
         return NextResponse.json({
           provider: "fallback",
           imageBase64: null,

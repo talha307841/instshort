@@ -226,17 +226,18 @@ export default function StudioProjectPage() {
   }
 
   async function generateAllVisuals() {
-    const total = project.scenes.length;
+    // Snapshot scenes so the loop stays stable even if store updates trigger re-renders.
+    const scenes = project.scenes;
+    const total = scenes.length;
     if (total === 0) return;
 
     updateProject(project.id, { status: "generating" });
     markProgress(project.id, 0, `${LABEL_GENERATING_VISUAL_PREFIX} 1 of ${total}...`);
 
     for (let i = 0; i < total; i += 1) {
-      const scene = project.scenes[i];
       // Sequential generation avoids concurrent API quota spikes on free tiers.
       // eslint-disable-next-line no-await-in-loop
-      await regenerateSceneVisual(scene);
+      await regenerateSceneVisual(scenes[i]);
       // i + 1 = scenes completed so far, giving accurate post-generation percentage.
       markProgress(
         project.id,
