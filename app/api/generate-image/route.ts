@@ -30,8 +30,19 @@ export async function POST(request: Request) {
       const nim = await callNimImage(enhancedPrompt);
       return NextResponse.json({ ...nim, prompt: enhancedPrompt });
     } catch {
-      const hf = await callHuggingFaceFlux(enhancedPrompt);
-      return NextResponse.json({ ...hf, prompt: enhancedPrompt });
+      try {
+        const hf = await callHuggingFaceFlux(enhancedPrompt);
+        return NextResponse.json({ ...hf, prompt: enhancedPrompt });
+      } catch {
+        // Both AI providers unavailable – return a placeholder so the studio stays functional
+        const seed = encodeURIComponent(prompt.slice(0, 30));
+        return NextResponse.json({
+          provider: "fallback",
+          imageBase64: null,
+          imageUrl: `https://picsum.photos/seed/${seed}/1080/1920`,
+          prompt: enhancedPrompt,
+        });
+      }
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";

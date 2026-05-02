@@ -96,6 +96,7 @@ export default function StudioProjectPage() {
   }
 
   async function handleGenerateScript() {
+    markProgress(project.id, 0, "Generating script...");
     updateProject(project.id, { status: "generating" });
     try {
       const response = await fetch("/api/generate-script", {
@@ -127,6 +128,7 @@ export default function StudioProjectPage() {
   async function handleImproveScript() {
     if (!project.script || !feedback.trim()) return;
 
+    markProgress(project.id, 0, "Improving script...");
     updateProject(project.id, { status: "generating" });
 
     try {
@@ -199,11 +201,21 @@ export default function StudioProjectPage() {
   }
 
   async function generateAllVisuals() {
-    for (const scene of project.scenes) {
+    const total = project.scenes.length;
+    if (total === 0) return;
+
+    updateProject(project.id, { status: "generating" });
+    markProgress(project.id, 0, `Generating visual 1 of ${total}...`);
+
+    for (let i = 0; i < project.scenes.length; i += 1) {
+      markProgress(project.id, Math.round((i / total) * 100), `Generating visual ${i + 1} of ${total}...`);
       // Sequential generation avoids concurrent API quota spikes on free tiers.
       // eslint-disable-next-line no-await-in-loop
-      await regenerateSceneVisual(scene);
+      await regenerateSceneVisual(project.scenes[i]);
     }
+
+    markProgress(project.id, 100, "Visuals complete!");
+    updateProject(project.id, { status: "idle" });
     setCurrentStep(3);
   }
 
@@ -298,8 +310,14 @@ export default function StudioProjectPage() {
           </div>
 
           <div className="grid gap-3 md:grid-cols-2">
-            <button className="btn-primary" onClick={handleGenerateScript}>
-              Generate Script
+            <button
+              className="btn-primary"
+              onClick={handleGenerateScript}
+              disabled={project.status === "generating" || project.status === "assembling"}
+            >
+              {project.status === "generating" && project.progressLabel === "Generating script..."
+                ? "Generating..."
+                : "Generate Script"}
             </button>
             <div className="flex gap-2">
               <input
@@ -308,8 +326,14 @@ export default function StudioProjectPage() {
                 placeholder="Feedback to improve script"
                 onChange={(event) => setFeedback(event.target.value)}
               />
-              <button className="btn-secondary whitespace-nowrap" onClick={handleImproveScript}>
-                Improve Script
+              <button
+                className="btn-secondary whitespace-nowrap"
+                onClick={handleImproveScript}
+                disabled={project.status === "generating" || project.status === "assembling"}
+              >
+                {project.status === "generating" && project.progressLabel === "Improving script..."
+                  ? "Improving..."
+                  : "Improve Script"}
               </button>
             </div>
           </div>
@@ -325,8 +349,14 @@ export default function StudioProjectPage() {
         <section className="card space-y-4 p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-3xl">Step 2 - Visuals</h2>
-            <button className="btn-primary" onClick={generateAllVisuals} disabled={!project.scenes.length}>
-              Auto Generate All Visuals
+            <button
+              className="btn-primary"
+              onClick={generateAllVisuals}
+              disabled={!project.scenes.length || project.status === "generating" || project.status === "assembling"}
+            >
+              {project.status === "generating" && project.progressLabel.startsWith("Generating visual")
+                ? project.progressLabel
+                : "Auto Generate All Visuals"}
             </button>
           </div>
 
@@ -470,7 +500,7 @@ export default function StudioProjectPage() {
 
         <section className="card space-y-4 p-5">
           <h2 className="text-3xl">Step 5 - Export</h2>
-          <button className="btn-primary" onClick={handleAssemble} disabled={!project.scenes.length}>
+          <button className="btn-primary" onClick={handleAssemble} disabled={!project.scenes.length || project.status === "generating" || project.status === "assembling"}>
             Assemble Video
           </button>
 
@@ -495,7 +525,11 @@ export default function StudioProjectPage() {
         </section>
       </div>
 
-      <ProgressOverlay show={project.status === "assembling"} progress={project.progress} label={project.progressLabel} />
+      <ProgressOverlay
+        show={project.status === "assembling" || project.status === "generating"}
+        progress={project.progress}
+        label={project.progressLabel}
+      />
     </main>
   );
 }
