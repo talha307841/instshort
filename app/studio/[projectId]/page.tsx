@@ -212,13 +212,14 @@ export default function StudioProjectPage() {
     markProgress(project.id, 0, `${LABEL_GENERATING_VISUAL_PREFIX} 1 of ${total}...`);
 
     for (let i = 0; i < project.scenes.length; i += 1) {
+      const scene = project.scenes[i];
       // Sequential generation avoids concurrent API quota spikes on free tiers.
       // eslint-disable-next-line no-await-in-loop
-      await regenerateSceneVisual(project.scenes[i]);
+      await regenerateSceneVisual(scene);
       markProgress(
         project.id,
         Math.round(((i + 1) / total) * 100),
-        `${LABEL_GENERATING_VISUAL_PREFIX} ${i + 1} of ${total}...`,
+        `Generated visual ${i + 1} of ${total}`,
       );
     }
 
@@ -507,7 +508,15 @@ export default function StudioProjectPage() {
 
         <section className="card space-y-4 p-5">
           <h2 className="text-3xl">Step 5 - Export</h2>
-          <button className="btn-primary" onClick={handleAssemble} disabled={!project.scenes.length || project.status === "generating" || project.status === "assembling"}>
+          <button
+            className="btn-primary"
+            onClick={handleAssemble}
+            disabled={
+              !project.scenes.length ||
+              project.status === "generating" ||
+              project.status === "assembling"
+            }
+          >
             Assemble Video
           </button>
 
