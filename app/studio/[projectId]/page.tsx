@@ -27,13 +27,13 @@ const LABEL_GENERATING_VISUAL_PREFIX = "Generating visual";
 /**
  * Returns `busyText` while the project is generating with the given trigger label,
  * otherwise returns `idleText`. For visual generation (prefix match) pass the
- * progressLabel itself as `busyText`.
+ * progressLabel itself as `busyText`; if undefined, `idleText` is used as the fallback.
  */
 function getButtonLabel(
   status: string,
   progressLabel: string | undefined,
   triggerLabel: string,
-  busyText: string,
+  busyText: string | undefined,
   idleText: string,
   matchMode: "exact" | "prefix" = "exact",
 ): string {
@@ -42,7 +42,7 @@ function getButtonLabel(
     (matchMode === "prefix"
       ? progressLabel?.startsWith(triggerLabel)
       : progressLabel === triggerLabel);
-  return isActive ? busyText : idleText;
+  return isActive ? (busyText ?? idleText) : idleText;
 }
 
 export default function StudioProjectPage() {
@@ -242,7 +242,7 @@ export default function StudioProjectPage() {
       markProgress(
         project.id,
         Math.round(((i + 1) / total) * 100),
-        `Visual ${i + 1} of ${total} processed`,
+        `Visual ${i + 1} of ${total} completed`,
       );
     }
 
@@ -397,7 +397,7 @@ export default function StudioProjectPage() {
                 project.status,
                 project.progressLabel,
                 LABEL_GENERATING_VISUAL_PREFIX,
-                project.progressLabel ?? "Auto Generate All Visuals",
+                project.progressLabel,
                 "Auto Generate All Visuals",
                 "prefix",
               )}

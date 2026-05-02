@@ -15,13 +15,8 @@ function buildPrompt(category: CategoryKey, prompt: string, mood: string) {
 
 /** Produces a URL-safe alphanumeric seed for Picsum from an arbitrary prompt string. */
 function sanitizePicsumSeed(prompt: string): string {
-  return (
-    prompt
-      .slice(0, PICSUM_SEED_MAX_LENGTH)
-      .replace(/[^a-zA-Z0-9]/g, "-")
-      .replace(/-+/g, "-")
-      .replace(/^-+|-+$/g, "") || "placeholder"
-  );
+  // Keep only alphanumeric characters; fall back to "placeholder" if nothing remains.
+  return prompt.slice(0, PICSUM_SEED_MAX_LENGTH).replace(/[^a-zA-Z0-9]/g, "") || "placeholder";
 }
 
 export async function POST(request: Request) {
